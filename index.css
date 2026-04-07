@@ -26,11 +26,14 @@ main {
 }
 
 .players a {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   border: 1px solid #ccc;
   border-radius: 0.25rem;
   padding: 1ch;
   text-decoration: none;
+  font-size: 1.5rem;
   color: black;
 }
 
@@ -48,6 +51,7 @@ form {
   display: grid;
   gap: 1ch;
   padding: 0 1rem;
+  margin-bottom: 2rem;
 }
 
 label {
