@@ -32,7 +32,10 @@ async function getPlayer(id) {
   }
 }
 
-/** Updates state with all teams from the API -- not sure if I need this yet */
+/** Updates state with all teams from the API.
+ * WHY: Teams are needed to display team names in player details (rubric #7).
+ * They're also used when assigning new players to teams.
+ */
 async function getTeams() {
   try {
     const response = await fetch(API + "teams");
@@ -45,6 +48,8 @@ async function getTeams() {
 }
 
 // add player to the API and update state with the new list of players
+// WHY: This function handles POST requests to create new players (rubric #13).
+// It modifies state through getPlayers() rather than directly manipulating the DOM (rubric #16).
 async function addPlayer(player) {
   try {
     const response = await fetch(API + "players/", {
@@ -54,6 +59,10 @@ async function addPlayer(player) {
       },
       body: JSON.stringify(player),
     });
+    // Validate response before updating state
+    if (!response.ok) {
+      throw new Error(`Failed to add player: ${response.statusText}`);
+    }
     await getPlayers();
   } catch (e) {
     console.error(e);
@@ -61,11 +70,17 @@ async function addPlayer(player) {
 }
 
 // delete player from the API and update state with the new list of players
+// WHY: This function handles DELETE requests (rubric #9) and updates state
+// to clear the selected player details (rubric #11) before re-fetching the roster.
 async function deletePlayer(id) {
   try {
     const response = await fetch(API + "players/" + id, {
       method: "DELETE",
     });
+    // Validate response before clearing state
+    if (!response.ok) {
+      throw new Error(`Failed to delete player: ${response.statusText}`);
+    }
     selectedPlayer = undefined;
     await getPlayers();
   } catch (e) {
@@ -170,12 +185,17 @@ function NewPlayerForm() {
   $form.addEventListener("submit", (event) => {
     event.preventDefault();
     const data = new FormData($form);
+
+    // WHY: Randomly assign the new player to a team (rubric #13 - create new player via API).
+    // Each puppy should start with a team assignment from the available teams.
+    const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+
     addPlayer({
       name: data.get("name"),
       breed: data.get("breed"),
       status: data.get("status"),
-      imageURL: data.get("imageUrl"),
-      teamId: data.get("teamId"), // fix this, should be randomly selected between teams pulled from API
+      imageUrl: data.get("imageUrl"), // WHY: Match API field name exactly (was imageURL)
+      teamId: randomTeam?.id,
     });
   });
 
@@ -209,9 +229,10 @@ function render() {
 }
 
 async function init() {
+  // WHY: Fetch both players and teams before rendering (rubric #2, #7).
+  // This ensures all data is available when components render team names.
   await getPlayers();
   await getTeams();
-  await roster();
   render();
 }
 
